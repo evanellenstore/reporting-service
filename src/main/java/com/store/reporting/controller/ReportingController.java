@@ -16,4 +16,14 @@ public class ReportingController {
     public ReportResponseDTO getReport() {
         return reportingService.generateReport();
     }
+
+    @GetMapping("/report/proxy")
+    public ReportResponseDTO getReportProxy() {
+        return reportingService.generateReportProxy();
+    }
+
+    @GetMapping("/report/robust")
+    public ReportResponseDTO getReportRobust() {
+        return reportingService.generateReportRobust();
+    }
 }
