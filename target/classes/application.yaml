@@ -6,9 +6,9 @@ spring:
     name: reporting-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/reporting_db
+    url: jdbc:mysql://localhost:3307/reporting_db
     username: root
-    password: ellenverma
+    password: root
   jpa:
     hibernate:
       ddl-auto: update
