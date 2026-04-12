@@ -54,25 +54,24 @@ public class ReportingService {
         List<InventoryDTO> inventoryList = Collections.emptyList();
         List<BillingDTO> bills = Collections.emptyList();
 
-        // purchases
-        if (purchaseServiceUrl != null && !purchaseServiceUrl.isBlank()) {
-            String url = purchaseServiceUrl.endsWith("/") ? purchaseServiceUrl + "purchases" : purchaseServiceUrl + "/purchases";
+        // Get product reports from billing service (preferred source since it has bill items)
+        if (billingServiceUrl != null && !billingServiceUrl.isBlank()) {
+            String url = billingServiceUrl.endsWith("/") ? billingServiceUrl + "billings/report" : billingServiceUrl + "/billings/report";
             try {
                 ResponseEntity<ProductReportDTO[]> resp = rest.getForEntity(url, ProductReportDTO[].class);
                 if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
                     purchases = Arrays.asList(resp.getBody());
                 }
             } catch (RestClientException e) {
-                System.err.println("Robust report: failed to fetch purchases from " + url + ": " + e.getMessage());
+                System.err.println("Robust report: failed to fetch product reports from " + url + ": " + e.getMessage());
             }
         } else {
-            // as a last resort try Feign client if available
             try { purchases = purchaseClient.getAllPurchases(); } catch (Exception ignored) {}
         }
 
         // inventory
         if (inventoryServiceUrl != null && !inventoryServiceUrl.isBlank()) {
-            String url = inventoryServiceUrl.endsWith("/") ? inventoryServiceUrl + "inventory" : inventoryServiceUrl + "/inventory";
+            String url = inventoryServiceUrl.endsWith("/") ? inventoryServiceUrl + "inventory/report" : inventoryServiceUrl + "/inventory/report";
             try {
                 ResponseEntity<InventoryDTO[]> resp = rest.getForEntity(url, InventoryDTO[].class);
                 if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
@@ -85,21 +84,16 @@ public class ReportingService {
             try { inventoryList = inventoryClient.getAllInventory(); } catch (Exception ignored) {}
         }
 
-        // billing - prefer billing summary endpoint if available
+        // Get billing data for revenue totals
         if (billingServiceUrl != null && !billingServiceUrl.isBlank()) {
-            String urlReport = billingServiceUrl.endsWith("/") ? billingServiceUrl + "billings/report" : billingServiceUrl + "/billings/report";
             String urlFallback = billingServiceUrl.endsWith("/") ? billingServiceUrl + "billings" : billingServiceUrl + "/billings";
             try {
-                ResponseEntity<BillingDTO[]> resp = rest.getForEntity(urlReport, BillingDTO[].class);
+                ResponseEntity<BillingDTO[]> resp = rest.getForEntity(urlFallback, BillingDTO[].class);
                 if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
                     bills = Arrays.asList(resp.getBody());
-                } else {
-                    // try fallback
-                    ResponseEntity<BillingDTO[]> resp2 = rest.getForEntity(urlFallback, BillingDTO[].class);
-                    if (resp2.getStatusCode().is2xxSuccessful() && resp2.getBody() != null) bills = Arrays.asList(resp2.getBody());
                 }
             } catch (RestClientException e) {
-                System.err.println("Robust report: failed to fetch bills from " + urlReport + " or fallback " + urlFallback + ": " + e.getMessage());
+                System.err.println("Robust report: failed to fetch bills from " + urlFallback + ": " + e.getMessage());
             }
         } else {
             try { bills = billingClient.getAllBills(); } catch (Exception ignored) {}
