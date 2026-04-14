@@ -27,3 +27,7 @@ inventory:
 billing:
   service:
     url: http://localhost:2013
+
+product:
+  service:
+    url: http://localhost:2014
